@@ -3,19 +3,19 @@ import plotly.graph_objects as go
 import numpy as np
 from numba import njit
 import sys
+sys.path.insert(1,'../')
 sys.path.insert(1,'./')
 import scripts.plotting_utils as u
 
 
 # --- Configuration ---
-RQFN = '/Users/peter/My Drive/Programming/FCA_python/cfp_data_analysis/data/ruhnau_qvist_input_time_series.feather' # Uncomment to use your file
+RQFN = '/Users/peter/My Drive/Programming/FCA_python/cfp_data_analysis/data/ruhnau_qvist_input_time_series.feather'
 HOURS_OF_DATA = 35 * 8760
-# STORAGE_LEVELS = [3, 12, 24, 24*2, 24*4, 24*8, 24*30]  # Hours of average demand
-STORAGE_LEVELS = [12]  # Hours of average demand
+STORAGE_LEVELS = [3, 12, 24, 24*2, 24*4, 24*8, 24*30]  # Hours of average demand
 OVERBUILD_RANGE = np.arange(1.0, 1.6, 0.05) # Slider values
 PLOT_DOWNSAMPLE = 400 # Number of points to plot per line (for performance)
 
-# --- 1. Simulation Logic (Numba Optimized) ---
+# --- 1. Simulation Logic ---
 
 @njit
 def simulate_storage(residual_load, storage_capacity_mwh):
@@ -93,7 +93,7 @@ def main():
         # Store curves for this overbuild factor
         step_curves = {}
         
-        # baseline (no renewables)
+        # Base load duration curve (no renewables)
         step_curves['Load'] = get_duration_curve(load / avg_demand, PLOT_DOWNSAMPLE)
         # Base case (No storage)
         step_curves['No Storage'] = get_duration_curve(raw_residual / avg_demand, PLOT_DOWNSAMPLE)
@@ -103,7 +103,7 @@ def main():
             cap_mwh = avg_demand * hours
             res_load_storage = simulate_storage(raw_residual, cap_mwh)
             
-            # Normalize by avg demand for easier reading (p.u.)
+            # Normalize by avg demand
             curve = get_duration_curve(res_load_storage / avg_demand, PLOT_DOWNSAMPLE)
             if hours < 24: 
                 step_curves[f'{hours}h Storage'] = curve
@@ -117,21 +117,16 @@ def main():
     
     fig = go.Figure()
 
-    # We need to add traces for the FIRST step initially (visible=True)
+    # add traces for the first step
     initial_ob = round(OVERBUILD_RANGE[0], 2)
     scenarios = list(results[initial_ob].keys()) # ['No Storage', '3h', '12h'...]
     
     # X-axis (Duration %)
     x_axis = np.linspace(0, 100, PLOT_DOWNSAMPLE)
 
-    # Add all traces for ALL steps, but set visible=False for non-initial ones
-    # This is how Plotly sliders work efficiently without callbacks
-    
-    # To make the slider work, we flatten the logic:
-    # We add ALL lines for Step 1, then ALL lines for Step 2...
+    # Add all traces for all steps, but set visible=False for non-initial ones
     # Then the slider just toggles the visibility of the "chunk" of lines corresponding to that step.
     
-    # colors = ['black', '#d62728', '#ff7f0e', '#2ca02c', '#1f77b4', '#9467bd']
     colors = u.fca_colorway_v1
     
     for ob_factor in OVERBUILD_RANGE:
@@ -143,11 +138,9 @@ def main():
             fig.add_trace(go.Scatter(
                 x=x_axis,
                 y=curve,
-                # mode='lines+markers',
                 mode='lines',
                 name=label,
                 visible=is_visible,
-                # marker_opacity=0,
                 line=dict(width=2, color=colors[i % len(colors)], shape='spline'),
                 legendgroup=label # Keeps legend clean when switching
             ))
@@ -155,7 +148,6 @@ def main():
     # Create Slider Steps
     steps = []
     num_traces_per_step = len(scenarios)
-    total_steps = len(OVERBUILD_RANGE)
     
     for i, ob_factor in enumerate(OVERBUILD_RANGE):
         step = dict(
@@ -214,7 +206,6 @@ def main():
         legend=dict(y=0.95, x=1.05, xanchor='left', bgcolor='rgba(255,255,255,0.8)')
     )
 
-    fig.write_image('res_load_dur_stor.svg')
     fig.show()
 
 if __name__ == "__main__":
