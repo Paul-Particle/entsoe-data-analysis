@@ -84,7 +84,7 @@ def main():
         
         # 1. Scale Generation Capacity
         # Total Capacity needed to meet annual demand on average * Overbuild
-        total_capacity_mw = (avg_demand / mix_cf.mean()) * ob_factor
+        total_capacity_mw = (avg_demand / mix_cf.mean()) * ob_factor # type: ignore
         generation = total_capacity_mw * mix_cf
         
         # 2. Raw Residual Load (Load - Gen)
@@ -94,7 +94,7 @@ def main():
         step_curves = {}
         
         # Base load duration curve (no renewables)
-        step_curves['Load'] = get_duration_curve(load / avg_demand, PLOT_DOWNSAMPLE)
+        step_curves['Load'] = get_duration_curve(load / avg_demand, PLOT_DOWNSAMPLE) # type: ignore
         # Base case (No storage)
         step_curves['No Storage'] = get_duration_curve(raw_residual / avg_demand, PLOT_DOWNSAMPLE)
         
@@ -152,14 +152,14 @@ def main():
     for i, ob_factor in enumerate(OVERBUILD_RANGE):
         step = dict(
             method="update",
-            args=[{"visible": [False] * len(fig.data)},
+            args=[{"visible": [False] * len(fig.data)}, # type: ignore
                   {"title": f"Residual Load Duration Curve (Overbuild: {ob_factor:.2f}x)"}],
             label=f"{ob_factor:.2f}x"
         )
         # Calculate which traces to turn on
         start_idx = i * num_traces_per_step
         for j in range(num_traces_per_step):
-            step["args"][0]["visible"][start_idx + j] = True
+            step["args"][0]["visible"][start_idx + j] = True # type: ignore
             
         steps.append(step)
 
