@@ -32,28 +32,22 @@ This project is a data analysis pipeline for downloading, processing, and visual
     conda activate cfp-data-analysis
     ```
 
-3.  **Install dependencies (if not using Conda):**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Configure the pipeline:**
+3.  **Configure the pipeline:**
 
     Edit the `config.yaml` file to specify the data download period and other parameters.
 
-5.  **Run the Snakemake pipeline:**
+4.  **Run the Snakemake pipeline:**
 
     ```bash
     snakemake --cores 1 --scheduler greedy
     ```
 
-    This will execute the entire workflow, from data downloading to plot generation.
+    This will execute the workflow, from data downloading to plot generation (depending on configuration).
 
 ## Workflow
 
 The `Snakefile` defines the following steps:
 
 1.  **Download data:** The `download_entsoe_data.py` script downloads data from the ENTSO-E API.
-2.  **Process data:** The `processing.py` script processes the raw data.
-3.  **Create plots:** The `plotting_utils.py` script generates plots from the processed data.
+2.  **Integrate data:** The `integrate_data.py` script combines the raw download files into bigger files by datatype.
+3.  **Process data:** The `processing.py` script processes the raw data and combines it into `processed_data.feather`.
