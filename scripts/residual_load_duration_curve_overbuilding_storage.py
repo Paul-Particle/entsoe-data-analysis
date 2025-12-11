@@ -11,7 +11,9 @@ import scripts.plotting_utils as u
 # --- Configuration ---
 RQFN = '/Users/peter/My Drive/Programming/FCA_python/cfp_data_analysis/data/ruhnau_qvist_input_time_series.feather'
 HOURS_OF_DATA = 35 * 8760
-STORAGE_LEVELS = [3, 12, 24, 24*2, 24*4, 24*8, 24*30]  # Hours of average demand
+# STORAGE_LEVELS = [3, 12, 24, 24*2, 24*4, 24*8, 24*30]  # Hours of average demand
+STORAGE_LEVELS = [12]  # Hours of average demand
+# OVERBUILD_RANGE = np.arange(1.0, 1.6, 0.05) # Slider values
 OVERBUILD_RANGE = np.arange(1.0, 1.6, 0.05) # Slider values
 PLOT_DOWNSAMPLE = 400 # Number of points to plot per line (for performance)
 
@@ -104,6 +106,7 @@ def main():
             res_load_storage = simulate_storage(raw_residual, cap_mwh)
             
             # Normalize by avg demand
+            print(hours,': ', np.clip(res_load_storage,0,None).mean()/avg_demand)
             curve = get_duration_curve(res_load_storage / avg_demand, PLOT_DOWNSAMPLE)
             if hours < 24: 
                 step_curves[f'{hours}h Storage'] = curve
@@ -141,7 +144,11 @@ def main():
                 mode='lines',
                 name=label,
                 visible=is_visible,
-                line=dict(width=2, color=colors[i % len(colors)], shape='spline'),
+                line=dict(
+                    width=2, 
+                    color=colors[i % len(colors)], 
+                    # shape='spline',
+                ),
                 legendgroup=label # Keeps legend clean when switching
             ))
 
